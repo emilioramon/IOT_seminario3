@@ -1,0 +1,14 @@
+{ "id":"MSG_1477473769511",  
+   "type":"TRAFFIC_SIGNAL",  
+   "timestamp":1477473769511, 
+   "msg":{ 
+        "rt":"traffic-signal", 
+        "id":"TL_atR1S3_542", 
+        "road":"R1", 
+        "road-segment":"R1S3", 
+        "signal-type":"TRAFFIC_LIGHT", 
+        "starting-position":542, 
+        "ending-position":542, 
+        "value":"HLL" 
+        } 
+} 
