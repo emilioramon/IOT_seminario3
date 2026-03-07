@@ -1,3 +1,4 @@
+import componentes.RoadPlace;
 import componentes.SmartCar;
 import componentes.SpeedLimitSign;
 import componentes.SmartCar_RoadInfoSubscriber;
@@ -30,11 +31,13 @@ public class SmartCarStarterApp {
 
 		// Ejercicio 5.2 Simulación de entrada/salida de SmartCars en el segmento R3s1
 		SmartCar[] scs = new SmartCar[10];
+		RoadPlace rp = new RoadPlace("R3s1", 0);
 		boolean Entrada = true; // true para entrada, false para salida
 		if (Entrada) {
 		//Ingreso de 10 SmartCars en el segmento R3s1
-			for (int i=0; i<3; i++) {
+			for (int i=0; i<6; i++) {
 				scs[i] = new SmartCar(smartCarID + "_" + i, brokerURL);
+				scs[i].setCurrentRoadPlace(rp);
 				scs[i].getIntoRoad("R3s1", 100);
 				scs[i].setSpeed(100); // Asignamos una velocidad inicial a cada SmartCar
 			}
@@ -58,8 +61,11 @@ public class SmartCarStarterApp {
 		Thread.sleep(5000); // esperar un poco para que el SmartCar reciba la señal de tráfico y ajuste su velocidad
 
 		//Ejercicio 5.5 Simulación de notificación de incidente por parte del SmartCar
+		scs[0].notifyIncident("accident"); // el SmartCar notifica un accidente en su ubicación actual
+		for (int i=1; i<6; i++) {
+			scs[i].getOutRoad("R3s1", 150	);
+		}
 		
 		
-		//sc1.notifyIncident(...);
     }
 }

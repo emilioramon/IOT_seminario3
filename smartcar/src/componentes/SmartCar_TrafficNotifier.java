@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import utils.MySimpleLogger;
 
+
 public class SmartCar_TrafficNotifier extends MyMqttClient {
 	
 	public SmartCar_TrafficNotifier(String clientId, SmartCar smartcar, String brokerURL) {
@@ -78,19 +79,30 @@ public class SmartCar_TrafficNotifier extends MyMqttClient {
 		// publish incident 'basic'
 		// TIP: habrá que adaptar este mensaje si queremos conectarlo al servicio de tráfico SmartTraffic PTPaterna,
 		//      para que siga la estructura allí propuesta (ver documento Seminario 3)
-		JSONObject pubMsg = new JSONObject();
-		try {
-			pubMsg.put("vehicle", smartCarID);
-			pubMsg.put("event", notificationType);
-			pubMsg.put("road", place.getRoad());
-			pubMsg.put("kp", place.getKm());
+		JSONObject json = new JSONObject();
+		JSONObject msg = new JSONObject();
+		try {	
+			msg.put("rt", "traffic::alert");
+			msg.put("incident-type", "TRAFFIC_ACCIDENT");
+			msg.put("id", smartCarID);
+			msg.put("road", place.getRoad());
+			msg.put("road-segment", place.getRoad());
+			msg.put("starting-position", place.getKm());
+			msg.put("ending-position", place.getKm());
+			msg.put("description", "Vehicle Crash");
+			msg.put("status", "Active");
+			json.put("id", "MSG_1477472671831");
+			json.put("type", "ROAD_INCIDENT");
+			json.put("timestamp", System.currentTimeMillis());  
+			json.put("msg", msg);
+		
 	   		} catch (JSONException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		
    		int pubQoS = 0;
-		MqttMessage message = new MqttMessage(pubMsg.toString().getBytes());
+		MqttMessage message = new MqttMessage(json.toString().getBytes());
     	message.setQos(pubQoS);
     	message.setRetained(false);
 
@@ -100,7 +112,7 @@ public class SmartCar_TrafficNotifier extends MyMqttClient {
     	try {
     		// publish message to broker
 			token = topic.publish(message);
-			MySimpleLogger.trace(this.clientId, pubMsg.toString());
+			MySimpleLogger.trace(this.clientId, json.toString());
 	    	// Wait until the message has been delivered to the broker
 			token.waitForCompletion();
 			Thread.sleep(100);
