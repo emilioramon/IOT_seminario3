@@ -49,6 +49,9 @@ public class SmartCar_RoadInfoSubscriber extends MyMqttClient {
 	public void subscribeToRoad(String road) {
 		String topic = "es/upv/pros/tatami/smartcities/traffic/PTPaterna/road/" + road + "/signals";
 		this.subscribe(topic);
+		topic = "es/upv/pros/tatami/smartcities/traffic/PTPaterna/road/" + road + "/info";
+		this.subscribe(topic);
+
 	}
 
 }

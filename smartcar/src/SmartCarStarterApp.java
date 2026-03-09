@@ -60,6 +60,8 @@ public class SmartCarStarterApp {
 			//Ejercicio 5.5 Simulación de notificación de incidente por parte del SmartCar
 			scs[0].notifyIncident("accident"); // el SmartCar notifica un accidente en su ubicación actual
 			Thread.sleep(5000);
+
+			//Limpieza final
 			for (int i=1; i<6; i++) {
 				scs[i].getOutRoad("R3s1", 150	);
 			}
