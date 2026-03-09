@@ -17,7 +17,7 @@ public class SmartCar_RoadInfoSubscriber extends MyMqttClient {
 	@Override
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
 		
-		super.messageArrived(topic, message);			// esto muestra el mensaje por pantalla ... comentar para no verlo
+		super.messageArrived(topic, message);		
 		String payload = new String(message.getPayload());
 		
 		try {
@@ -26,10 +26,12 @@ public class SmartCar_RoadInfoSubscriber extends MyMqttClient {
  
 			// Ejercicio 5.4: Simulación de notificación de cambio de estado de una señal de tráfico por parte del SmartCar
             if (json.has("type") && json.getString("type").equals("TRAFFIC_SIGNAL")) {
-				JSONObject msg = json.getJSONObject("msg");
-				int signSpeedLimit = Integer.parseInt(msg.getString("value"));
-                int roadSpeedLimit = msg.getInt("road-speed-limit");
-                this.smartcar.adjustSpeed(signSpeedLimit, roadSpeedLimit); // roadSpeedLimit se podría obtener de la información del segmento de carretera
+								JSONObject msg = json.getJSONObject("msg");
+								if (msg.getString("signal-type").equals("SPEED_LIMIT")) {
+									int signSpeedLimit = Integer.parseInt(msg.getString("value"));
+									int roadSpeedLimit = msg.getInt("road-speed-limit");
+									this.smartcar.adjustSpeed(signSpeedLimit, roadSpeedLimit);
+								} 
             }
 			// Ejercicio 5.5: Simulación de notificación de incidente por parte del SmartCar
             if (json.has("event") && json.getString("event").equals("accident")) {
@@ -38,13 +40,9 @@ public class SmartCar_RoadInfoSubscriber extends MyMqttClient {
                 MySimpleLogger.error(this.smartcar.getSmartCarID(), "*** ALERTA DE ACCIDENTE en road " + road + " km " + kp );
             }
         } catch (Exception e) {
-			MySimpleLogger.error(this.smartcar.getSmartCarID(), "Error processing message: " + e.getMessage());
-            // Not a JSON message or missing fields — ignore
+						MySimpleLogger.error(this.smartcar.getSmartCarID(), "Error processing message: " + e.getMessage());
+						e.printStackTrace();
         }
-		
-		// PROCESS THE MESSGE
-		// topic - contains the topic
-		// payload - contains the message
 
 	}
 

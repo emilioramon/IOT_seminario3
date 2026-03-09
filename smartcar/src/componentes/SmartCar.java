@@ -11,10 +11,10 @@ public class SmartCar {
 	protected String brokerURL = null;
 
 	protected String smartCarID = null;
-	protected RoadPlace rp = null;	// simula la ubicación actual del vehículo
+	protected RoadPlace rp = null;
 	protected SmartCar_RoadInfoSubscriber subscriber = null;
 	protected SmartCar_TrafficNotifier notifier = null;
-	protected int speed = 0; // velocidad actual del vehículo (km/h)
+	protected int speed = 0;
 	
 	public SmartCar(String id, String brokerURL) {
 		
@@ -27,7 +27,6 @@ public class SmartCar {
 		this.notifier.connect();
 
 	}
-	
 	
 	public void setSmartCarID(String smartCarID) {
 		this.smartCarID = smartCarID;
@@ -61,10 +60,6 @@ public class SmartCar {
     }
 	public void setCurrentRoadPlace(RoadPlace rp) {
 		this.rp = rp;
-
-		// 1.- Si ya teníamos algún suscriptor conectado al tramo de carretera antiguo, primero los desconectamos
-		// 2.- Ahora debemos crear suscriptor/es para conocer 'cosas' de dicho tramo de carretra, y conectarlo/s
-		// 3.- Debemos suscribir este/os suscriptor/es a los canales adecuados
 	}
 
 	public RoadPlace getCurrentPlace() {

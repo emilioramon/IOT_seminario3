@@ -76,9 +76,6 @@ public class SmartCar_TrafficNotifier extends MyMqttClient {
 		MqttTopic topic = myClient.getTopic(myTopic);
 
 
-		// publish incident 'basic'
-		// TIP: habrá que adaptar este mensaje si queremos conectarlo al servicio de tráfico SmartTraffic PTPaterna,
-		//      para que siga la estructura allí propuesta (ver documento Seminario 3)
 		JSONObject json = new JSONObject();
 		JSONObject msg = new JSONObject();
 		try {	
@@ -97,12 +94,12 @@ public class SmartCar_TrafficNotifier extends MyMqttClient {
 			json.put("msg", msg);
 		
 	   		} catch (JSONException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+				MySimpleLogger.error(this.clientId, "Error creating JSON message: " + e1.getMessage());
+				e1.printStackTrace();
 		}
 		
    		int pubQoS = 0;
-		MqttMessage message = new MqttMessage(json.toString().getBytes());
+			MqttMessage message = new MqttMessage(json.toString().getBytes());
     	message.setQos(pubQoS);
     	message.setRetained(false);
 

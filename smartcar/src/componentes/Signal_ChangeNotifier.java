@@ -37,7 +37,6 @@ public class Signal_ChangeNotifier extends MyMqttClient {
 			m1.put("timestamp", timestap);
 			this.publish(topic, m1.toString());
 		} catch (Exception e) {
-			// TODO: handle exception
 			e.printStackTrace();
 			MySimpleLogger.error(this.clientId, "Error publishing message: " + e.getMessage());
 		}
