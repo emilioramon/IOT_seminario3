@@ -9,8 +9,30 @@
             "name": "SmartCarStarterApp",
             "request": "launch",
             "mainClass": "SmartCarStarterApp",
+            "classPaths": ["${workspaceFolder}/bin", "${workspaceFolder}/lib/*"],
             "args": [
                 "SmartCar-1234ABC",
+                "tcp://tambori.dsic.upv.es:10083"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "EmergencyCorridorApp",
+            "request": "launch",
+            "mainClass": "EmergencyCorridorApp",
+            "classPaths": ["${workspaceFolder}/bin", "${workspaceFolder}/lib/*"],
+            "args": [
+                "AMB-001",
+                "tcp://tambori.dsic.upv.es:10083"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "CombinedSimulationApp",
+            "request": "launch",
+            "mainClass": "CombinedSimulationApp",
+            "classPaths": ["${workspaceFolder}/bin", "${workspaceFolder}/lib/*"],
+            "args": [
                 "tcp://tambori.dsic.upv.es:10083"
             ]
         }

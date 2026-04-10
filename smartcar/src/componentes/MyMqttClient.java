@@ -84,12 +84,9 @@ public abstract class MyMqttClient implements MqttCallback {
 	
 	
 	public void disconnect() {
-		
+
 		// disconnect
 		try {
-			// wait to ensure subscribed messages are delivered
-			Thread.sleep(120000);
-
 			myClient.disconnect();
 			MySimpleLogger.trace(this.clientId, "Client disconnected!");
 		} catch (Exception e) {
