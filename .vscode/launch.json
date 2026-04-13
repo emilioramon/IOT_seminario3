@@ -35,6 +35,22 @@
             "args": [
                 "tcp://tambori.dsic.upv.es:10083"
             ]
+        },
+        {
+            "type": "java",
+            "name": "TrafficLightDeviceApp (local test)",
+            "request": "launch",
+            "mainClass": "TrafficLightDeviceApp",
+            "classPaths": ["${workspaceFolder}/bin", "${workspaceFolder}/lib/*"],
+            "args": [
+                "TL.R3s1.main",
+                "tcp://tambori.dsic.upv.es:10083",
+                "R3",
+                "R3s1",
+                "100",
+                "100",
+                "RED"
+            ]
         }
     ]
 }

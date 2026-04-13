@@ -1,6 +1,7 @@
 import componentes.EmergencyLevel;
 import componentes.EmergencyVehicle;
 import componentes.RoadPlace;
+import componentes.RemoteTrafficLightSign;
 import componentes.SmartCar;
 import componentes.TrafficLightSign;
 import componentes.TrafficLightSign.LightState;
@@ -31,12 +32,23 @@ import java.util.List;
  *       → la ambulancia IGNORA el límite de velocidad (modo emergencia)
  *    4. La ambulancia llega → cierra emergencia → orquestador restaura semáforos
  *
+ *  MODO DISPOSITIVO REMOTO:
+ *    Si USE_REMOTE_DEVICE = true, el semáforo TL.R3s1.main se controla
+ *    a través de un dispositivo físico (Raspberry Pi) usando comandos MQTT.
+ *    El dispositivo debe estar ejecutando TrafficLightDeviceApp.
+ *
  * Uso:
  *   java -cp "bin:lib/*" CombinedSimulationApp <brokerURL>
  */
 public class CombinedSimulationApp {
 
     private static final String LOGGER_TAG = "CombinedSim";
+
+    // ============================================================
+    // CONFIGURACIÓN: cambiar a true para usar el dispositivo RPi
+    // ============================================================
+    private static final boolean USE_REMOTE_DEVICE = true;
+    private static final String  REMOTE_DEVICE_ID  = "TL.R3s1.main";
 
     // Tramos de la ruta (la ambulancia va de R5s1 → R3s2 → R3s1 para atender el accidente)
     private static final String SEG_ACCIDENTE = "R3s1";  // donde ocurre el accidente
@@ -58,7 +70,19 @@ public class CombinedSimulationApp {
         // ================================================================
         // 1. Semáforos del corredor (instanciados por la app, controlados por el orquestador)
         // ================================================================
-        TrafficLightSign tlR3s1Main  = new TrafficLightSign("TL.R3s1.main",  null, brokerURL, "R3", "R3s1",       100, 100, LightState.RED);
+
+        // TL.R3s1.main: local o remoto (dispositivo RPi) según configuración
+        TrafficLightSign tlR3s1Main;
+        if (USE_REMOTE_DEVICE) {
+            log(">>> Usando semaforo REMOTO: " + REMOTE_DEVICE_ID + " (dispositivo fisico)");
+            tlR3s1Main = new RemoteTrafficLightSign(
+                REMOTE_DEVICE_ID + ".proxy", REMOTE_DEVICE_ID,
+                brokerURL, "R3", "R3s1", 100, 100, LightState.RED);
+        } else {
+            log(">>> Usando semaforo LOCAL: TL.R3s1.main (simulado)");
+            tlR3s1Main = new TrafficLightSign("TL.R3s1.main", null, brokerURL, "R3", "R3s1", 100, 100, LightState.RED);
+        }
+
         TrafficLightSign tlR3s1Cross = new TrafficLightSign("TL.R3s1.cross", null, brokerURL, "R3", "R3s1-cruce", 100, 100, LightState.GREEN);
         TrafficLightSign tlR3s2Main  = new TrafficLightSign("TL.R3s2.main",  null, brokerURL, "R3", "R3s2",       200, 200, LightState.RED);
         TrafficLightSign tlR3s2Cross = new TrafficLightSign("TL.R3s2.cross", null, brokerURL, "R3", "R3s2-cruce", 200, 200, LightState.GREEN);

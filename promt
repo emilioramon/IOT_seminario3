@@ -1,0 +1,19 @@
+Necesito que me ayudes con algo, actualmente ejecuto el archivo "CombinedSimulationApp.java" que simula unos coches, semaforo y un vehiculo de emergencia y funciona todo sin problema, el tema es el siguiente, tengo un dispositivo fisico ttmi056 que es una Raspberry y que remplazaria uno de los semaforo, necesito hacer la prueba colocando el codigo del semaforo en el  dispositivo, te voy a pasar algunas indicaciones de conexion si necesitas validar algo
+
+
+"
+Para acceder a la Raspberry, nos conectaremos vía SSH (puerto 22) con el usuario 'ina'
+(contraseña 'ina.2022'). 
+
+En el directorio dispositivo existe una implementación funcional de la solución. Esto no hay
+que tocarlo ni extenderlo. Cada grupo deberá crear un nuevo directorio (ej. mi-dispositivo
+o my-device) donde dejar su implementación.
+Para subir ficheros al dispositivo podéis usar cualquier cliente de ficheros remotos/SFTP (tipo
+FileZilla, WISE-FTP, Transmit ó Cyberduck), o a través de consola. Por ejemplo, estando en un
+directorio donde existe el fichero midispositivo.jar, podemos subirlo a la carpeta
+/home/ina/my-device de la Raspberry Pi (os pedirá la contraseña del usuario ina):
+$> scp midispositivo.jar ina@ttmi056.iot.upv.es:/home/ina/disp-grupo1
+"
+
+la idea es deplegar un semaforo en el dispositivo, y este debe funcionar con nuestra solucion de "CombinedSimulationApp.java"
+

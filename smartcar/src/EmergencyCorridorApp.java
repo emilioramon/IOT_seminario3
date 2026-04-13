@@ -3,12 +3,11 @@ import componentes.EmergencyVehicle;
 import componentes.TrafficLightSign;
 import componentes.TrafficLightSign.LightState;
 import componentes.VehicleType;
+import java.util.List;
 import servicio.CorridorOrchestrationService;
 import servicio.CorridorRoute;
 import servicio.CorridorRoute.RouteSegment;
 import utils.MySimpleLogger;
-
-import java.util.List;
 
 /**
  * Aplicación principal del sistema de corredor de emergencia.
