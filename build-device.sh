@@ -26,7 +26,7 @@ rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
 # Compilar todos los fuentes necesarios
-CLASSPATH="$LIB_DIR/org.eclipse.paho.client.mqttv3-1.2.5.jar:$LIB_DIR/java-json.jar"
+CLASSPATH="$LIB_DIR/org.eclipse.paho.client.mqttv3-1.2.5.jar:$LIB_DIR/java-json.jar:$LIB_DIR/pi4j-core-2.6.1.jar:$LIB_DIR/pi4j-plugin-pigpio-2.6.1.jar:$LIB_DIR/pi4j-library-pigpio-2.6.1.jar:$LIB_DIR/slf4j-api-2.0.12.jar"
 
 # Compilar para Java 11 (la RPi tiene Java 11, class file version 55)
 javac -cp "$CLASSPATH" \
@@ -41,6 +41,7 @@ javac -cp "$CLASSPATH" \
     "$SRC_DIR/componentes/SmartCar_InicidentNotifier.java" \
     "$SRC_DIR/componentes/TrafficSign.java" \
     "$SRC_DIR/componentes/TrafficLightSign.java" \
+    "$SRC_DIR/componentes/GpioTrafficLight.java" \
     "$SRC_DIR/TrafficLightDeviceApp.java"
 
 echo "Compilacion OK"

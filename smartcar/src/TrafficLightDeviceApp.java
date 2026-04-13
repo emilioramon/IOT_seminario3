@@ -1,3 +1,4 @@
+import componentes.GpioTrafficLight;
 import componentes.MyMqttClient;
 import componentes.TrafficLightSign;
 import componentes.TrafficLightSign.LightState;
@@ -58,6 +59,12 @@ public class TrafficLightDeviceApp {
         MySimpleLogger.level = MySimpleLogger.INFO;
 
         // ------------------------------------------------------------------
+        // 0. Inicializar GPIO (LEDs físicos del semáforo)
+        // ------------------------------------------------------------------
+        GpioTrafficLight gpio = new GpioTrafficLight();
+        gpio.initialize();
+
+        // ------------------------------------------------------------------
         // 1. Crear el semáforo real (publica señales TRAFFIC_SIGNAL)
         // ------------------------------------------------------------------
         TrafficLightSign trafficLight = new TrafficLightSign(
@@ -66,6 +73,7 @@ public class TrafficLightDeviceApp {
 
         trafficLight.connect();
         trafficLight.publishSignal(); // Publicar estado inicial
+        gpio.updateLeds(initialState); // Encender LED del estado inicial
 
         MySimpleLogger.info(LOGGER_TAG,
             "Semaforo creado: id=" + deviceId +
@@ -78,7 +86,7 @@ public class TrafficLightDeviceApp {
         String controlTopic = String.format(CONTROL_TOPIC_PATTERN, deviceId);
 
         ControlSubscriber controller = new ControlSubscriber(
-            deviceId + ".ctrl", brokerURL, trafficLight);
+            deviceId + ".ctrl", brokerURL, trafficLight, gpio);
         controller.connect();
         controller.subscribe(controlTopic);
 
@@ -102,6 +110,7 @@ public class TrafficLightDeviceApp {
         // Shutdown hook para desconexión limpia
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             MySimpleLogger.info(LOGGER_TAG, "Apagando dispositivo...");
+            gpio.shutdown();
             controller.disconnect();
             trafficLight.disconnect();
             MySimpleLogger.info(LOGGER_TAG, "Dispositivo desconectado.");
@@ -119,11 +128,14 @@ public class TrafficLightDeviceApp {
     static class ControlSubscriber extends MyMqttClient {
 
         private final TrafficLightSign trafficLight;
+        private final GpioTrafficLight gpio;
 
         public ControlSubscriber(String clientId, String brokerURL,
-                                 TrafficLightSign trafficLight) {
+                                 TrafficLightSign trafficLight,
+                                 GpioTrafficLight gpio) {
             super(clientId, null, brokerURL);
             this.trafficLight = trafficLight;
+            this.gpio = gpio;
         }
 
         @Override
@@ -157,6 +169,7 @@ public class TrafficLightDeviceApp {
                     MySimpleLogger.warn(clientId,
                         ">>> COMANDO RECIBIDO: SET_STATE → " + newState.getDescription());
                     trafficLight.setState(newState);
+                    gpio.updateLeds(newState);
                 } catch (IllegalArgumentException e) {
                     MySimpleLogger.error(clientId,
                         "Estado desconocido: '" + stateStr + "'. Valores validos: RED, AMBER, GREEN");
