@@ -12,28 +12,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Servicio de orquestación del corredor de emergencia.
- *
- * Escucha dos tipos de eventos:
- *
- *  A) EMERGENCY_ALERT (tópico propio del servicio):
- *     - EMERGENCY_START → abre corredor (verde en semáforos del trayecto,
- *                          rojo en cruces conflictivos)
- *     - EMERGENCY_END   → restaura semáforos al estado normal
- *
- *  B) ROAD_INCIDENT (tópico estándar …/road/+/alerts):
- *     - TRAFFIC_ACCIDENT → publica señal de reducción de velocidad en esa vía
- *                          para que los SmartCars que circulan frenen
- *
- * Los semáforos (TrafficLightSign) son controlados mediante su API Java.
- * NO se suscriben a ningún tópico: siguen siendo reutilizables.
- */
+
 public class CorridorOrchestrationService extends MyMqttClient {
 
     private static final int AHEAD_SEGMENTS = 3;
 
-    /** Tópico wildcard para recibir alertas de accidente de cualquier vía. */
+    /** Tópico para recibir alertas de accidente de cualquier vía. */
     private static final String ACCIDENT_ALERTS_TOPIC =
         "es/upv/pros/tatami/smartcities/traffic/PTPaterna/road/+/alerts";
 
@@ -47,7 +31,6 @@ public class CorridorOrchestrationService extends MyMqttClient {
     private final Map<String, CorridorRoute> routes         = new HashMap<>();
     private final Map<String, String>        activeCorridors = new HashMap<>();
 
-    /** Callback opcional: se invoca cuando se detecta un accidente en una vía. */
     public interface AccidentListener {
         void onAccident(String road, int km);
     }
@@ -67,7 +50,6 @@ public class CorridorOrchestrationService extends MyMqttClient {
             " (" + route.size() + " segmentos)");
     }
 
-    /** Suscribe a alertas de emergencia Y a alertas de accidente de tráfico. */
     public void startListening() {
         this.subscribe(EmergencyAlertPublisher.EMERGENCY_TOPIC);
         this.subscribe(ACCIDENT_ALERTS_TOPIC);
@@ -75,9 +57,6 @@ public class CorridorOrchestrationService extends MyMqttClient {
         MySimpleLogger.info(clientId, "Escuchando accidentes en  : " + ACCIDENT_ALERTS_TOPIC);
     }
 
-    // ------------------------------------------------------------------
-    // Recepción de mensajes MQTT
-    // ------------------------------------------------------------------
 
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
@@ -93,7 +72,6 @@ public class CorridorOrchestrationService extends MyMqttClient {
             } else if ("ROAD_INCIDENT".equals(type)) {
                 handleRoadIncident(envelope);
             }
-            // Formato simple de SmartCar_InicidentNotifier (sin envelope)
             else if (envelope.has("event") && "accident".equals(envelope.optString("event"))) {
                 String road = envelope.optString("road", "unknown");
                 int    km   = envelope.optInt("kp", 0);
@@ -105,9 +83,6 @@ public class CorridorOrchestrationService extends MyMqttClient {
         }
     }
 
-    // ------------------------------------------------------------------
-    // A) Gestión de emergencias (corredor)
-    // ------------------------------------------------------------------
 
     private void handleEmergencyAlert(JSONObject envelope) {
         try {
@@ -148,7 +123,7 @@ public class CorridorOrchestrationService extends MyMqttClient {
         List<CorridorRoute.RouteSegment> ahead = route.getAheadSegments(startIdx, AHEAD_SEGMENTS);
 
         MySimpleLogger.warn(clientId,
-            ">>> ABRIENDO CORREDOR <<< ruta=" + route.getRouteId() +
+            "ABRIENDO CORREDOR : ruta=" + route.getRouteId() +
             " vehículo=" + vehicleId + " | " + ahead.size() + " segmentos en verde");
 
         for (CorridorRoute.RouteSegment seg : ahead) {
@@ -156,12 +131,12 @@ public class CorridorOrchestrationService extends MyMqttClient {
             if (corridorLight != null) {
                 corridorLight.setState(LightState.GREEN);
                 MySimpleLogger.info(clientId, "  [VERDE] " + seg.getRoadSegment() +
-                    " → " + corridorLight.getSignId());
+                    " => " + corridorLight.getSignId());
             }
             for (TrafficLightSign conflict : seg.getConflictingLights()) {
                 conflict.setState(LightState.RED);
                 MySimpleLogger.info(clientId, "  [ROJO ] cruce " + seg.getRoadSegment() +
-                    " → " + conflict.getSignId());
+                    " => " + conflict.getSignId());
             }
         }
 
@@ -179,26 +154,22 @@ public class CorridorOrchestrationService extends MyMqttClient {
         if (route == null) return;
 
         MySimpleLogger.info(clientId,
-            ">>> CERRANDO CORREDOR <<< ruta=" + routeId + " vehículo=" + vehicleId);
+            "CERRANDO CORREDOR : ruta=" + routeId + " vehículo=" + vehicleId);
 
         for (CorridorRoute.RouteSegment seg : route.getAllSegments()) {
             TrafficLightSign corridorLight = seg.getCorridorLight();
             if (corridorLight != null) {
                 corridorLight.setState(LightState.RED);
-                MySimpleLogger.info(clientId, "  [REST→ROJO ] " + seg.getRoadSegment() +
-                    " → " + corridorLight.getSignId());
+                MySimpleLogger.info(clientId, "  [REST=>ROJO ] " + seg.getRoadSegment() +
+                    " => " + corridorLight.getSignId());
             }
             for (TrafficLightSign conflict : seg.getConflictingLights()) {
                 conflict.setState(LightState.GREEN);
-                MySimpleLogger.info(clientId, "  [REST→VERDE] cruce " + seg.getRoadSegment() +
-                    " → " + conflict.getSignId());
+                MySimpleLogger.info(clientId, "  [REST=>VERDE] cruce " + seg.getRoadSegment() +
+                    " => " + conflict.getSignId());
             }
         }
     }
-
-    // ------------------------------------------------------------------
-    // B) Gestión de accidentes de tráfico → reducción de velocidad
-    // ------------------------------------------------------------------
 
     private void handleRoadIncident(JSONObject envelope) {
         try {
@@ -217,13 +188,9 @@ public class CorridorOrchestrationService extends MyMqttClient {
 
     private void handleAccidentOnRoad(String road, int km) {
         MySimpleLogger.warn(clientId,
-            "!!! ACCIDENTE detectado en vía=" + road + " km=" + km +
-            " → reduciendo velocidad a " + ACCIDENT_SPEED_LIMIT + " km/h");
+            "ACCIDENTE detectado en vía=" + road + " km=" + km +
+            " => reduciendo velocidad a " + ACCIDENT_SPEED_LIMIT + " km/h");
 
-        // Ejecutar en hilo separado para evitar deadlock de Paho:
-        // llamar a publish() desde messageArrived() en el mismo cliente bloquea
-        // el hilo de callback porque publish() intenta adquirir un lock interno
-        // que el propio hilo de callback ya tiene.
         final AccidentListener listener = accidentListener;
         Thread t = new Thread(() -> {
             publishSpeedReduction(road, ACCIDENT_SPEED_LIMIT, 100);
@@ -240,10 +207,7 @@ public class CorridorOrchestrationService extends MyMqttClient {
         t.start();
     }
 
-    /**
-     * Publica una señal SPEED_LIMIT en la vía indicada.
-     * Los SmartCars suscritos a …/signals recibirán el mensaje y ajustarán su velocidad.
-     */
+
     private void publishSpeedReduction(String road, int reducedSpeed, int roadSpeedLimit) {
         String topic = String.format(SIGNALS_TOPIC_PATTERN, road);
         long   now   = System.currentTimeMillis();
@@ -267,16 +231,12 @@ public class CorridorOrchestrationService extends MyMqttClient {
 
             this.publish(topic, envelope.toString());
             MySimpleLogger.info(clientId,
-                "Señal de velocidad reducida publicada: " + reducedSpeed + " km/h → " + topic);
+                "Señal de velocidad reducida publicada: " + reducedSpeed + " km/h => " + topic);
 
         } catch (Exception e) {
             MySimpleLogger.error(clientId, "Error publicando reducción de velocidad: " + e.getMessage());
         }
     }
-
-    // ------------------------------------------------------------------
-    // Utilidades
-    // ------------------------------------------------------------------
 
     private CorridorRoute findRoute(String currentRoad, String destination) {
         for (CorridorRoute route : routes.values()) {

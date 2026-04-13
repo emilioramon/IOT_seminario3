@@ -30,38 +30,12 @@ public abstract class TrafficSign extends MyMqttClient {
         this.signId           = buildSignId();
     }
 
-    // ---------------------------------------------------------------
-    // Cada subclase define su propio ID y tipo de señal
-    // ---------------------------------------------------------------
-    protected abstract String buildSignId();    // e.g. "SL_atR1S3_542", "TL_atR1S3_542"
-    protected abstract String getSignalType();  // e.g. "SPEED_LIMIT", "TRAFFIC_LIGHT"
-    protected abstract String getValue();       // e.g. "080", "HLL"
 
-    // ---------------------------------------------------------------
-    // Publicación del mensaje (lógica común)
-    // ---------------------------------------------------------------
+    protected abstract String buildSignId();  
+    protected abstract String getSignalType();  
+    protected abstract String getValue(); 
 
-    /**
-     * Construye y publica un mensaje TRAFFIC_SIGNAL con los datos
-     * proporcionados por la subclase.
-     *
-     * Formato:
-     * {
-     *   "id"        : "MSG_<timestamp>",
-     *   "type"      : "TRAFFIC_SIGNAL",
-     *   "timestamp" : <epoch_ms>,
-     *   "msg": {
-     *     "rt"               : "traffic-signal",
-     *     "id"               : "<signId>",
-     *     "road"             : "<road>",
-     *     "road-segment"     : "<roadSegment>",
-     *     "signal-type"      : "<SPEED_LIMIT|TRAFFIC_LIGHT|...>",
-     *     "starting-position": <int>,
-     *     "ending-position"  : <int>,
-     *     "value"            : "<valor específico de la señal>"
-     *   }
-     * }
-     */
+
     public void publishSignal() {
 
         String topic = String.format(TOPIC_PATTERN, this.road);
@@ -78,7 +52,7 @@ public abstract class TrafficSign extends MyMqttClient {
             msg.put("ending-position",   this.endingPosition);
             msg.put("value",             this.getValue());
 
-            // Cada subclase puede añadir campos extra al mensaje
+            
             enrichMessage(msg);
 
             JSONObject m3 = new JSONObject();
@@ -99,13 +73,9 @@ public abstract class TrafficSign extends MyMqttClient {
         }
     }
 
-    /**
-     * Hook opcional: las subclases pueden sobreescribir este método
-     * para añadir campos extra al objeto "msg" sin duplicar la lógica
-     * de publicación.
-     */
+  
     protected void enrichMessage(JSONObject msg) throws Exception {
-        // vacío por defecto
+        
     }
 
     public String getSignId()          { return signId; }

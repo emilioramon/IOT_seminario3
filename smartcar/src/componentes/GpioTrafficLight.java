@@ -35,7 +35,7 @@ public class GpioTrafficLight {
 
     /**
      * Inicializa Pi4J2 y configura los pines como salidas digitales.
-     * Si Pi4J no está disponible (e.g. en desarrollo fuera de la Pi),
+     * Si Pi4J no está disponible (ejemplo en desarrollo fuera de la Pi),
      * funciona en modo simulación sin error.
      */
     public void initialize() {
@@ -98,7 +98,7 @@ public class GpioTrafficLight {
         }
 
         try {
-            String code = state.getCode(); // e.g. "HLL", "LHL", "LLH"
+            String code = state.getCode();
 
             redOutput.state(code.charAt(0) == 'H' ? DigitalState.HIGH : DigitalState.LOW);
             amberOutput.state(code.charAt(1) == 'H' ? DigitalState.HIGH : DigitalState.LOW);

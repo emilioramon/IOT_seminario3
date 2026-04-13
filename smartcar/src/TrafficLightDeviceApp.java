@@ -7,13 +7,6 @@ import org.json.JSONObject;
 import utils.MySimpleLogger;
 
 /**
- * Aplicación del semáforo para desplegar en dispositivo físico (Raspberry Pi).
- *
- * Esta app reemplaza a un TrafficLightSign local: se conecta al broker MQTT,
- * escucha comandos en un tópico de control, y cuando recibe un comando
- * SET_STATE cambia el estado del semáforo y publica la señal TRAFFIC_SIGNAL
- * en el tópico estándar de la carretera.
- *
  * Tópico de control (suscripción):
  *   es/upv/pros/tatami/smartcities/traffic/PTPaterna/traffic-light/{deviceId}/control
  *
@@ -72,8 +65,8 @@ public class TrafficLightDeviceApp {
             startPos, endPos, initialState);
 
         trafficLight.connect();
-        trafficLight.publishSignal(); // Publicar estado inicial
-        gpio.updateLeds(initialState); // Encender LED del estado inicial
+        trafficLight.publishSignal(); 
+        gpio.updateLeds(initialState); 
 
         MySimpleLogger.info(LOGGER_TAG,
             "Semaforo creado: id=" + deviceId +
@@ -116,7 +109,6 @@ public class TrafficLightDeviceApp {
             MySimpleLogger.info(LOGGER_TAG, "Dispositivo desconectado.");
         }));
 
-        // Mantener vivo
         while (true) {
             Thread.sleep(60000);
         }
@@ -167,7 +159,7 @@ public class TrafficLightDeviceApp {
                 try {
                     LightState newState = LightState.valueOf(stateStr);
                     MySimpleLogger.warn(clientId,
-                        ">>> COMANDO RECIBIDO: SET_STATE → " + newState.getDescription());
+                        "COMANDO RECIBIDO: SET_STATE => " + newState.getDescription());
                     trafficLight.setState(newState);
                     gpio.updateLeds(newState);
                 } catch (IllegalArgumentException e) {

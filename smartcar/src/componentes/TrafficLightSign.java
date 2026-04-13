@@ -7,13 +7,13 @@ package componentes;
  *
  * El estado del semáforo se codifica en el campo "value" con 3 caracteres,
  * uno por cada luz (H=encendida, L=apagada):
- *   Posición 0 → Rojo
- *   Posición 1 → Ámbar
- *   Posición 2 → Verde
+ *   Posición 0 => Rojo
+ *   Posición 1 => Ámbar
+ *   Posición 2 => Verde
  *
- *   "HLL" → Rojo encendido  (stop)
- *   "LHL" → Ámbar encendido (precaución)
- *   "LLH" → Verde encendido (paso libre)
+ *   "HLL" => Rojo encendido  (stop)
+ *   "LHL" => Ámbar encendido (precaución)
+ *   "LLH" => Verde encendido (paso libre)
  *
  * Ejemplo de mensaje publicado:
  * {
@@ -86,7 +86,7 @@ public class TrafficLightSign extends TrafficSign {
         return "TRAFFIC_LIGHT";
     }
 
-    /** Valor: código de 3 caracteres del estado actual, e.g. "HLL" */
+    /** Valor: código de 3 caracteres del estado actual, ejemplo "HLL" */
     @Override
     protected String getValue() {
         return currentState.getCode();
@@ -99,7 +99,7 @@ public class TrafficLightSign extends TrafficSign {
     /** Cambia el estado y publica automáticamente el nuevo valor */
     public void setState(LightState newState) {
         this.currentState = newState;
-        System.out.println("[" + signId + "] Estado → " + newState.getDescription());
+        System.out.println("[" + signId + "] Estado => " + newState.getDescription());
         publishSignal();
     }
 
@@ -109,7 +109,7 @@ public class TrafficLightSign extends TrafficSign {
 
     /**
      * Simula un ciclo completo de semáforo:
-     *   Verde (greenMs) → Ámbar (amberMs) → Rojo (redMs)
+     *   Verde (greenMs) => Ámbar (amberMs) => Rojo (redMs)
      * y repite 'cycles' veces.
      */
     public void runCycle(int cycles, long greenMs, long amberMs, long redMs)

@@ -1,56 +1,30 @@
 import componentes.EmergencyLevel;
 import componentes.EmergencyVehicle;
-import componentes.RoadPlace;
 import componentes.RemoteTrafficLightSign;
+import componentes.RoadPlace;
 import componentes.SmartCar;
 import componentes.TrafficLightSign;
 import componentes.TrafficLightSign.LightState;
 import componentes.VehicleType;
+import java.util.ArrayList;
+import java.util.List;
 import servicio.CorridorOrchestrationService;
 import servicio.CorridorRoute;
 import servicio.CorridorRoute.RouteSegment;
 import utils.MySimpleLogger;
 
-import java.util.ArrayList;
-import java.util.List;
 
-/**
- * Simulación combinada del sistema:
- *
- *  Escenario: en la ciudad inteligente hay coches circulando en varios
- *  tramos. Un coche sufre un accidente, los demás deben reducir su
- *  velocidad, y una ambulancia debe llegar al lugar del accidente
- *  aprovechando un corredor verde coordinado.
- *
- *  FASES:
- *    1. Tráfico normal en R3s1, R3s2 y R5s1 (coches circulando a 100 km/h)
- *    2. CAR-0 sufre un accidente en R3s1
- *       → orquestador publica SPEED_LIMIT 30 km/h (todos los coches frenan)
- *       → orquestador despacha la ambulancia (callback)
- *    3. La ambulancia inicia emergencia desde R5s1 hacia R3s1 (al accidente)
- *       → orquestador abre corredor: verde para el trayecto, rojo para cruces
- *       → la ambulancia IGNORA el límite de velocidad (modo emergencia)
- *    4. La ambulancia llega → cierra emergencia → orquestador restaura semáforos
- *
- *  MODO DISPOSITIVO REMOTO:
- *    Si USE_REMOTE_DEVICE = true, el semáforo TL.R3s1.main se controla
- *    a través de un dispositivo físico (Raspberry Pi) usando comandos MQTT.
- *    El dispositivo debe estar ejecutando TrafficLightDeviceApp.
- *
- * Uso:
- *   java -cp "bin:lib/*" CombinedSimulationApp <brokerURL>
- */
 public class CombinedSimulationApp {
 
     private static final String LOGGER_TAG = "CombinedSim";
 
     // ============================================================
-    // CONFIGURACIÓN: cambiar a true para usar el dispositivo RPi
+    // CONFIGURACIÓN: cambiar a true para usar el dispositivo remoto fisico 
     // ============================================================
     private static final boolean USE_REMOTE_DEVICE = true;
     private static final String  REMOTE_DEVICE_ID  = "TL.R3s1.main";
 
-    // Tramos de la ruta (la ambulancia va de R5s1 → R3s2 → R3s1 para atender el accidente)
+    // Tramos de la ruta (la ambulancia va de R5s1 => R3s2 => R3s1 para atender el accidente)
     private static final String SEG_ACCIDENTE = "R3s1";  // donde ocurre el accidente
     private static final String SEG_INTER     = "R3s2";  // tramo intermedio
     private static final String SEG_HOSPITAL  = "R5s1";  // base de la ambulancia
@@ -67,19 +41,16 @@ public class CombinedSimulationApp {
         String brokerURL = args[0];
         MySimpleLogger.level = MySimpleLogger.INFO;
 
-        // ================================================================
-        // 1. Semáforos del corredor (instanciados por la app, controlados por el orquestador)
-        // ================================================================
 
-        // TL.R3s1.main: local o remoto (dispositivo RPi) según configuración
+        // TL.R3s1.main: local o remoto (dispositivo fisico)
         TrafficLightSign tlR3s1Main;
         if (USE_REMOTE_DEVICE) {
-            log(">>> Usando semaforo REMOTO: " + REMOTE_DEVICE_ID + " (dispositivo fisico)");
+            log("Usando semaforo REMOTO: " + REMOTE_DEVICE_ID + " (dispositivo fisico)");
             tlR3s1Main = new RemoteTrafficLightSign(
                 REMOTE_DEVICE_ID + ".proxy", REMOTE_DEVICE_ID,
                 brokerURL, "R3", "R3s1", 100, 100, LightState.RED);
         } else {
-            log(">>> Usando semaforo LOCAL: TL.R3s1.main (simulado)");
+            log("Usando semaforo LOCAL: TL.R3s1.main (simulado)");
             tlR3s1Main = new TrafficLightSign("TL.R3s1.main", null, brokerURL, "R3", "R3s1", 100, 100, LightState.RED);
         }
 
@@ -94,7 +65,7 @@ public class CombinedSimulationApp {
         tlR5s1Main.connect(); tlR5s1Cross.connect();
 
         // ================================================================
-        // 2. Ruta del corredor: R5s1 → R3s2 → R3s1 (ambulancia va hacia el accidente)
+        // Ruta del corredor: R5s1 => R3s2 => R3s1 (ambulancia va hacia el accidente)
         // ================================================================
         CorridorRoute route = new CorridorRoute("ruta-emergencia");
         route.addSegment(new RouteSegment(SEG_HOSPITAL, tlR5s1Main, List.of(tlR5s1Cross)));
@@ -102,7 +73,7 @@ public class CombinedSimulationApp {
         route.addSegment(new RouteSegment(SEG_ACCIDENTE,tlR3s1Main, List.of(tlR3s1Cross)));
 
         // ================================================================
-        // 3. Orquestador
+        // Orquestador
         // ================================================================
         CorridorOrchestrationService orchestrator =
             new CorridorOrchestrationService("corridor-orchestrator", brokerURL);
@@ -110,15 +81,15 @@ public class CombinedSimulationApp {
         orchestrator.connect();
 
         // ================================================================
-        // 4. PRE-CREAR la ambulancia ANTES del accidente.
+        // PRE-CREAR la ambulancia ANTES del accidente.
         //    Evita crear un cliente MQTT nuevo desde dentro del callback MQTT.
         // ================================================================
-        log(">>> Creando ambulancia en la base (" + SEG_HOSPITAL + ")");
+        log("Creando ambulancia en la base (" + SEG_HOSPITAL + ")");
         EmergencyVehicle ambulancia = new EmergencyVehicle(
             "AMB-001", brokerURL, VehicleType.AMBULANCE, EmergencyLevel.HIGH);
         ambulancia.setCurrentRoadPlace(new RoadPlace(SEG_HOSPITAL, 50));
         ambulancia.getIntoRoad(SEG_HOSPITAL, 50);
-        ambulancia.setSpeed(0); // en reposo
+        ambulancia.setSpeed(0);
 
         // Callback: cuando el orquestador detecta un accidente, activa la emergencia
         orchestrator.setAccidentListener((road, km) -> {
@@ -126,7 +97,7 @@ public class CombinedSimulationApp {
             log("*** DESPACHANDO AMBULANCIA desde " + SEG_HOSPITAL + " hacia " + road);
             try {
                 ambulancia.setSpeed(120);
-                ambulancia.startEmergency(road);  // publica EMERGENCY_START → orquestador abrirá corredor
+                ambulancia.startEmergency(road);  // publica EMERGENCY_START => orquestador abrirá corredor
             } catch (Exception e) {
                 MySimpleLogger.error(LOGGER_TAG, "Error al despachar ambulancia: " + e.getMessage());
             }
@@ -163,9 +134,9 @@ public class CombinedSimulationApp {
         coches.get(0).notifyIncident("accident");
 
         // El orquestador:
-        //  1) publica SPEED_LIMIT 30 km/h → todos los coches en el tópico frenan
-        //  2) dispara el callback (en hilo separado) → ambulance.startEmergency()
-        //  3) recibe EMERGENCY_START → abre el corredor (semáforos)
+        //  1) publica SPEED_LIMIT 30 km/h => todos los coches en el tópico frenan
+        //  2) dispara el callback (en hilo separado) => ambulance.startEmergency()
+        //  3) recibe EMERGENCY_START => abre el corredor (semáforos)
         Thread.sleep(4000);
 
         // ================================================================
