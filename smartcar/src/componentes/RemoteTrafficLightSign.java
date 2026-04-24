@@ -22,6 +22,7 @@ public class RemoteTrafficLightSign extends TrafficLightSign {
 
     private final String deviceId;
     private final String controlTopic;
+    private TrafficLightShadow shadow;
 
     /**
      * @param clientId    ID del cliente MQTT de este proxy (debe ser distinto al del dispositivo)
@@ -45,6 +46,11 @@ public class RemoteTrafficLightSign extends TrafficLightSign {
         this.controlTopic = String.format(CONTROL_TOPIC_PATTERN, deviceId);
     }
 
+    /** Asocia un shadow opcional que recibira actualizaciones de estado "desired". */
+    public void setShadow(TrafficLightShadow shadow) {
+        this.shadow = shadow;
+    }
+
     @Override
     public void setState(LightState newState) {
         try {
@@ -57,6 +63,10 @@ public class RemoteTrafficLightSign extends TrafficLightSign {
             this.publish(controlTopic, command.toString());
             MySimpleLogger.info(clientId,
                 "[REMOTE => " + deviceId + "] Comando enviado: " + newState.getDescription());
+
+            if (shadow != null) {
+                shadow.updateDesired(newState);
+            }
 
         } catch (Exception e) {
             MySimpleLogger.error(clientId,

@@ -1,5 +1,6 @@
 package componentes;
 
+import javax.net.ssl.SSLSocketFactory;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -15,6 +16,7 @@ public abstract class MyMqttClient implements MqttCallback {
 	protected MqttClient myClient;
 	protected String clientId = null;
 	protected String brokerURL = null;
+	protected SSLSocketFactory sslSocketFactory = null;
 
 	protected SmartCar smartcar = null;
 
@@ -49,12 +51,20 @@ public abstract class MyMqttClient implements MqttCallback {
 	}
 
 
+	public void setSslSocketFactory(SSLSocketFactory factory) {
+		this.sslSocketFactory = factory;
+	}
+
+
 	public void connect() {
 		// setup MQTT Client
 		MqttConnectOptions connOpt = new MqttConnectOptions();
-		
+
 		connOpt.setCleanSession(true);
 		connOpt.setKeepAliveInterval(30);
+		if (this.sslSocketFactory != null) {
+			connOpt.setSocketFactory(this.sslSocketFactory);
+		}
 //			connOpt.setUserName(M2MIO_USERNAME);
 //			connOpt.setPassword(M2MIO_PASSWORD_MD5.toCharArray());
 		

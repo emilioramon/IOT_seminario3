@@ -1,0 +1,41 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "iot:Connect",
+      "Resource": "arn:aws:iot:us-east-1:318150177696:client/mucnap-iot26-*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iot:Publish",
+      "Resource": [
+        "arn:aws:iot:us-east-1:318150177696:topic/road/*/alert",
+        "arn:aws:iot:us-east-1:318150177696:topic/road/*/traffic",
+        "arn:aws:iot:us-east-1:318150177696:topic/$aws/things/ttmi010/shadow/update"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iot:Subscribe",
+      "Resource": [
+        "arn:aws:iot:us-east-1:318150177696:topicfilter/road/*/signals",
+        "arn:aws:iot:us-east-1:318150177696:topicfilter/road/*/info",
+        "arn:aws:iot:us-east-1:318150177696:topicfilter/$aws/things/ttmi010/shadow/update/accepted",
+        "arn:aws:iot:us-east-1:318150177696:topicfilter/$aws/things/ttmi010/shadow/update/rejected",
+        "arn:aws:iot:us-east-1:318150177696:topicfilter/$aws/things/ttmi010/shadow/update/delta"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iot:Receive",
+      "Resource": [
+        "arn:aws:iot:us-east-1:318150177696:topic/road/*/signals",
+        "arn:aws:iot:us-east-1:318150177696:topic/road/*/info",
+        "arn:aws:iot:us-east-1:318150177696:topic/$aws/things/ttmi010/shadow/update/accepted",
+        "arn:aws:iot:us-east-1:318150177696:topic/$aws/things/ttmi010/shadow/update/rejected",
+        "arn:aws:iot:us-east-1:318150177696:topic/$aws/things/ttmi010/shadow/update/delta"
+      ]
+    }
+  ]
+}

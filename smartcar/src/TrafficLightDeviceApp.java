@@ -1,5 +1,7 @@
+import componentes.AwsIotConfig;
 import componentes.GpioTrafficLight;
 import componentes.MyMqttClient;
+import componentes.TrafficLightShadow;
 import componentes.TrafficLightSign;
 import componentes.TrafficLightSign.LightState;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -65,8 +67,8 @@ public class TrafficLightDeviceApp {
             startPos, endPos, initialState);
 
         trafficLight.connect();
-        trafficLight.publishSignal(); 
-        gpio.updateLeds(initialState); 
+        trafficLight.publishSignal();
+        gpio.updateLeds(initialState);
 
         MySimpleLogger.info(LOGGER_TAG,
             "Semaforo creado: id=" + deviceId +
@@ -74,12 +76,22 @@ public class TrafficLightDeviceApp {
             " estado=" + initialState.getDescription());
 
         // ------------------------------------------------------------------
+        // 1.b AWS IoT Shadow (opcional, via env vars AWS_IOT_*)
+        //     Publica el estado "reported" para que la nube sepa que muestra
+        //     realmente el dispositivo fisico.
+        // ------------------------------------------------------------------
+        TrafficLightShadow shadow = AwsIotConfig.buildShadowOrNull("TL-" + deviceId + "-device");
+        if (shadow != null) {
+            shadow.updateReported(initialState);
+        }
+
+        // ------------------------------------------------------------------
         // 2. Crear el suscriptor de control (recibe comandos SET_STATE)
         // ------------------------------------------------------------------
         String controlTopic = String.format(CONTROL_TOPIC_PATTERN, deviceId);
 
         ControlSubscriber controller = new ControlSubscriber(
-            deviceId + ".ctrl", brokerURL, trafficLight, gpio);
+            deviceId + ".ctrl", brokerURL, trafficLight, gpio, shadow);
         controller.connect();
         controller.subscribe(controlTopic);
 
@@ -121,13 +133,16 @@ public class TrafficLightDeviceApp {
 
         private final TrafficLightSign trafficLight;
         private final GpioTrafficLight gpio;
+        private final TrafficLightShadow shadow;
 
         public ControlSubscriber(String clientId, String brokerURL,
                                  TrafficLightSign trafficLight,
-                                 GpioTrafficLight gpio) {
+                                 GpioTrafficLight gpio,
+                                 TrafficLightShadow shadow) {
             super(clientId, null, brokerURL);
             this.trafficLight = trafficLight;
             this.gpio = gpio;
+            this.shadow = shadow;
         }
 
         @Override
@@ -162,6 +177,9 @@ public class TrafficLightDeviceApp {
                         "COMANDO RECIBIDO: SET_STATE => " + newState.getDescription());
                     trafficLight.setState(newState);
                     gpio.updateLeds(newState);
+                    if (shadow != null) {
+                        shadow.updateReported(newState);
+                    }
                 } catch (IllegalArgumentException e) {
                     MySimpleLogger.error(clientId,
                         "Estado desconocido: '" + stateStr + "'. Valores validos: RED, AMBER, GREEN");

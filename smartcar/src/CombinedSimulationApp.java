@@ -1,8 +1,10 @@
+import componentes.AwsIotConfig;
 import componentes.EmergencyLevel;
 import componentes.EmergencyVehicle;
 import componentes.RemoteTrafficLightSign;
 import componentes.RoadPlace;
 import componentes.SmartCar;
+import componentes.TrafficLightShadow;
 import componentes.TrafficLightSign;
 import componentes.TrafficLightSign.LightState;
 import componentes.VehicleType;
@@ -42,13 +44,18 @@ public class CombinedSimulationApp {
         MySimpleLogger.level = MySimpleLogger.INFO;
 
 
+        // AWS IoT Shadow opcional (solo si las env vars AWS_IOT_* estan definidas)
+        TrafficLightShadow shadow = AwsIotConfig.buildShadowOrNull("corridor-service");
+
         // TL.R3s1.main: local o remoto (dispositivo fisico)
         TrafficLightSign tlR3s1Main;
         if (USE_REMOTE_DEVICE) {
             log("Usando semaforo REMOTO: " + REMOTE_DEVICE_ID + " (dispositivo fisico)");
-            tlR3s1Main = new RemoteTrafficLightSign(
+            RemoteTrafficLightSign remote = new RemoteTrafficLightSign(
                 REMOTE_DEVICE_ID + ".proxy", REMOTE_DEVICE_ID,
                 brokerURL, "R3", "R3s1", 100, 100, LightState.RED);
+            remote.setShadow(shadow);
+            tlR3s1Main = remote;
         } else {
             log("Usando semaforo LOCAL: TL.R3s1.main (simulado)");
             tlR3s1Main = new TrafficLightSign("TL.R3s1.main", null, brokerURL, "R3", "R3s1", 100, 100, LightState.RED);
